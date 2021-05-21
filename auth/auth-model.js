@@ -8,7 +8,7 @@ function findByUsername(username) {
   return db('users').where({ username }).first();
 }
 
-async function add(user) {
+async function create(user) {
   const [id] = await db('users').insert(user);
   return findById(id);
 }
@@ -20,6 +20,6 @@ function findById(id) {
 module.exports = {
   find,
   findByUsername,
-  add,
+  create,
   findById,
 };
