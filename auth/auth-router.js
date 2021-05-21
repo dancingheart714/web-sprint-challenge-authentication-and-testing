@@ -1,5 +1,8 @@
 const router = require('express').Router();
 const bcrypt = require('bcryptjs');
+const Users require('../user/user-model.js');
+const jwt = require('jsonwebtoken');
+const { jwtSecret } = require('../config/secrets.js')
 
 router.post('/register', (req, res) => {
   let user = req.body;
@@ -14,8 +17,6 @@ router.post('/register', (req, res) => {
     });
 });
 
-router.post('/register', (req, res) => {
-  res.end('implement register, please!');
   /*
     IMPLEMENT
     You are welcome to build additional middlewares to help with the endpoint's functionality.
@@ -44,7 +45,25 @@ router.post('/register', (req, res) => {
 });
 
 router.post('/login', (req, res) => {
-  res.end('implement login, please!');
+  let { username, password } = req.body;
+  Users.findBy({ username })
+  .first()
+  .then((user) => {
+    if (user && bcrypt.compareSync(password, user.password)) {
+      const token = generateToken(user);
+      res.status(200).json({
+        message: `Welcome ${user.username}`,
+        token,
+      })
+    } else {
+      res.status(401).json({ message: 'invalid Credentials' })
+    }
+  })
+  .catch((error) => {
+    res.status(500).json(error)
+  })
+})
+
   /*
     IMPLEMENT
     You are welcome to build additional middlewares to help with the endpoint's functionality.
@@ -68,6 +87,17 @@ router.post('/login', (req, res) => {
     4- On FAILED login due to `username` not existing in the db, or `password` being incorrect,
       the response body should include a string exactly as follows: "invalid credentials".
   */
-});
+
+function generateToken(user){
+  const payload = {
+    subject: user.id,
+    username: user.username,
+    lat: Date.now()
+  }
+  const options = {
+    expiresIn: '1d'
+  }
+  return jwt.sign(payload, jwtSecret, options)
+}
 
 module.exports = router;
